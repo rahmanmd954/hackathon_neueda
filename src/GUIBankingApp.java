@@ -6,9 +6,10 @@ public class GUIBankingApp extends JFrame {
     private DefaultListModel<String> transactionListModel;
     private JLabel balanceLabel;
     private JComboBox<String> transactionTypeCombo;
-    private JTextField amountField, recipientField, descriptionField;
+    private JTextField amountField, descriptionField;
     private JPanel recipientPanel;
     private JLabel statusLabel;
+    private JComboBox<String> recipientCombo; // Add this line
 
     public GUIBankingApp() {
         setTitle("SecureBank Pro");
@@ -63,8 +64,8 @@ public class GUIBankingApp extends JFrame {
 
         recipientPanel = new JPanel(new BorderLayout());
         recipientPanel.add(new JLabel("Recipient:"), BorderLayout.WEST);
-        recipientField = new JTextField();
-        recipientPanel.add(recipientField, BorderLayout.CENTER);
+        recipientCombo = new JComboBox<>(new String[]{"Savings", "Checking"});
+        recipientPanel.add(recipientCombo, BorderLayout.CENTER);
         recipientPanel.setVisible(false);
         gbc.gridx = 0; gbc.gridy++;
         gbc.gridwidth = 2;
@@ -90,6 +91,24 @@ public class GUIBankingApp extends JFrame {
         transactionListModel = new DefaultListModel<>();
         transactionListModel.addElement("Jan 15, 2025 - Initial Deposit: +$2,500.00");
         JList<String> transactionList = new JList<>(transactionListModel);
+
+        // Custom cell renderer for coloring
+        transactionList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                String entry = value.toString();
+                if (entry.contains("Deposit") || entry.contains("Quick Deposit") || entry.matches(".*[+]\\$.*")) {
+                    label.setForeground(new Color(0, 128, 0)); // Green
+                } else if (entry.contains("Withdraw") || entry.contains("Quick Withdraw") || entry.matches(".*[-]\\$.*")) {
+                    label.setForeground(Color.RED);
+                } else {
+                    label.setForeground(Color.BLACK);
+                }
+                return label;
+            }
+        });
+
         JScrollPane historyScroll = new JScrollPane(transactionList);
         historyScroll.setBorder(BorderFactory.createTitledBorder("Recent Transactions"));
         historyScroll.setPreferredSize(new Dimension(400,150));
@@ -140,8 +159,8 @@ public class GUIBankingApp extends JFrame {
             showStatus("Insufficient funds", Color.RED);
             return;
         }
-        if ("Transfer".equals(type) && recipientField.getText().trim().isEmpty()) {
-            showStatus("Enter recipient", Color.RED);
+        if ("Transfer".equals(type) && recipientCombo.getSelectedItem() == null) {
+            showStatus("Select recipient", Color.RED);
             return;
         }
 
@@ -152,7 +171,7 @@ public class GUIBankingApp extends JFrame {
         // Record transaction
         String desc = descriptionField.getText().trim();
         if (desc.isEmpty()) desc = type;
-        String recipient = recipientField.getText().trim();
+        String recipient = recipientCombo.getSelectedItem() != null ? recipientCombo.getSelectedItem().toString() : "";
         String entry = String.format("%s - %s%s$%.2f%s",
                 new java.text.SimpleDateFormat("MMM d, yyyy HH:mm").format(new java.util.Date()),
                 desc,
@@ -165,7 +184,6 @@ public class GUIBankingApp extends JFrame {
         // Reset form
         transactionTypeCombo.setSelectedIndex(0);
         amountField.setText("");
-        recipientField.setText("");
         descriptionField.setText("");
         recipientPanel.setVisible(false);
         pack();
