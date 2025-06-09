@@ -1,18 +1,34 @@
 import java.awt.*;
+import java.util.*;
 import javax.swing.*;
 
+/**
+ * A tiny two‑account demo (Checking + Savings).
+ * – Switch between accounts with the combo in the upper‑right.
+ * – Deposit / Withdraw act on the active account.
+ * – Transfer moves money from the active account to the other one.
+ */
 public class GUIBankingApp extends JFrame {
-    private double currentBalance = 2500.00;
+    // ---------- simple data layer ----------
+    private final Map<String, Double> balances = new HashMap<>(); // accountName -> balance
+    private String currentAccount = "Checking";
+
+    // ---------- ui state ----------
     private DefaultListModel<String> transactionListModel;
-    private JLabel balanceLabel;
+    private JLabel balanceLabel, accountTypeLabel;
     private JComboBox<String> transactionTypeCombo;
     private JTextField amountField, descriptionField;
     private JPanel recipientPanel;
+    private JComboBox<String> recipientCombo; // destination for transfers
     private JLabel statusLabel;
-    private JComboBox<String> recipientCombo; // Add this line
+    private JComboBox<String> accountSwitchBox; // top‑right selector
 
     public GUIBankingApp() {
-        setTitle("SecureBank Pro");
+        // seed balances
+        balances.put("Checking", 2500.00);
+        balances.put("Savings", 1000.00);
+
+        setTitle("SecureBank Pro – Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initComponents();
         pack();
@@ -20,19 +36,22 @@ public class GUIBankingApp extends JFrame {
         setVisible(true);
     }
 
+    // ------------------------------------------- UI BUILD -------------------------------------------
     private void initComponents() {
-        // Account Overview Panel
+        /* ------------- account overview ------------- */
         JPanel accountPanel = new JPanel();
         accountPanel.setBorder(BorderFactory.createTitledBorder("Account Overview"));
-        accountPanel.setLayout(new GridLayout(0,1,5,5));
+        accountPanel.setLayout(new GridLayout(0, 1, 5, 5));
         accountPanel.add(new JLabel("Account Number: ****1234"));
-        accountPanel.add(new JLabel("Account Type: Checking"));
+        accountTypeLabel = new JLabel("Account Type: " + currentAccount);
+        accountPanel.add(accountTypeLabel);
         accountPanel.add(new JLabel("Account Holder: John Doe"));
-        balanceLabel = new JLabel("$" + String.format("%.2f", currentBalance), SwingConstants.CENTER);
+        balanceLabel = new JLabel("$" + fmt(balances.get(currentAccount)), SwingConstants.CENTER);
         balanceLabel.setFont(balanceLabel.getFont().deriveFont(24f));
         accountPanel.add(balanceLabel);
 
-        JPanel quickPanel = new JPanel(new GridLayout(1,4,5,5));
+        // quick actions row
+        JPanel quickPanel = new JPanel(new GridLayout(1, 4, 5, 5));
         JButton quickDepBtn = new JButton("Deposit $100");
         JButton quickWithBtn = new JButton("Withdraw $50");
         JButton viewStmtBtn = new JButton("View Statement");
@@ -43,17 +62,17 @@ public class GUIBankingApp extends JFrame {
         quickPanel.add(transferBtn);
         accountPanel.add(quickPanel);
 
-        // Transaction Form Panel
+        /* ------------- transaction form ------------- */
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(BorderFactory.createTitledBorder("Make Transaction"));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4,4,4,4);
+        gbc.insets = new Insets(4, 4, 4, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0; gbc.gridy = 0;
         formPanel.add(new JLabel("Transaction Type:"), gbc);
         gbc.gridx = 1;
-        transactionTypeCombo = new JComboBox<>(new String[]{"Select","Deposit","Withdraw","Transfer"});
+        transactionTypeCombo = new JComboBox<>(new String[]{"Select", "Deposit", "Withdraw", "Transfer"});
         formPanel.add(transactionTypeCombo, gbc);
 
         gbc.gridx = 0; gbc.gridy++;
@@ -62,9 +81,10 @@ public class GUIBankingApp extends JFrame {
         amountField = new JTextField();
         formPanel.add(amountField, gbc);
 
+        // recipient (only visible when Transfer)
         recipientPanel = new JPanel(new BorderLayout());
         recipientPanel.add(new JLabel("Recipient:"), BorderLayout.WEST);
-        recipientCombo = new JComboBox<>(new String[]{"Savings", "Checking"});
+        recipientCombo = new JComboBox<>(new String[]{"Checking", "Savings"});
         recipientPanel.add(recipientCombo, BorderLayout.CENTER);
         recipientPanel.setVisible(false);
         gbc.gridx = 0; gbc.gridy++;
@@ -87,59 +107,63 @@ public class GUIBankingApp extends JFrame {
         statusLabel = new JLabel(" ", SwingConstants.CENTER);
         formPanel.add(statusLabel, gbc);
 
-        // Transaction History
+        /* ------------- history list ------------- */
         transactionListModel = new DefaultListModel<>();
-        transactionListModel.addElement("Jan 15, 2025 - Initial Deposit: +$2,500.00");
+        transactionListModel.addElement("Jan 15, 2025 - Initial Deposit (Checking): +$2,500.00");
         JList<String> transactionList = new JList<>(transactionListModel);
-
-        // Custom cell renderer for coloring
-        transactionList.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                String entry = value.toString();
-                if (entry.contains("Deposit") || entry.contains("Quick Deposit") || entry.matches(".*[+]\\$.*")) {
-                    label.setForeground(new Color(0, 128, 0)); // Green
-                } else if (entry.contains("Withdraw") || entry.contains("Quick Withdraw") || entry.matches(".*[-]\\$.*")) {
-                    label.setForeground(Color.RED);
-                } else {
-                    label.setForeground(Color.BLACK);
-                }
-                return label;
-            }
-        });
-
+        transactionList.setCellRenderer(createColorRenderer());
         JScrollPane historyScroll = new JScrollPane(transactionList);
         historyScroll.setBorder(BorderFactory.createTitledBorder("Recent Transactions"));
-        historyScroll.setPreferredSize(new Dimension(400,150));
+        historyScroll.setPreferredSize(new Dimension(420, 150));
 
-        // Layout
+        /* ------------- account switch (upper‑right) ------------- */
+        accountSwitchBox = new JComboBox<>(new String[]{"Checking", "Savings"});
+        JPanel northWrapper = new JPanel(new BorderLayout());
+        northWrapper.add(accountPanel, BorderLayout.CENTER);
+        JPanel switchHolder = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        switchHolder.add(new JLabel("View:"));
+        switchHolder.add(accountSwitchBox);
+        northWrapper.add(switchHolder, BorderLayout.EAST);
+
+        /* ------------- frame layout ------------- */
         Container cp = getContentPane();
-        cp.setLayout(new BorderLayout(10,10));
-        cp.add(accountPanel, BorderLayout.NORTH);
+        cp.setLayout(new BorderLayout(10, 10));
+        cp.add(northWrapper, BorderLayout.NORTH);
         cp.add(formPanel, BorderLayout.CENTER);
         cp.add(historyScroll, BorderLayout.SOUTH);
 
-        // Events
+        /* ------------- listeners ------------- */
+        // show / hide recipient combo based on type
         transactionTypeCombo.addActionListener(e -> {
             boolean isTransfer = "Transfer".equals(transactionTypeCombo.getSelectedItem());
             recipientPanel.setVisible(isTransfer);
+            if (isTransfer) refreshRecipientOptions();
             pack();
         });
 
+        // process
         processBtn.addActionListener(e -> processTransaction());
         quickDepBtn.addActionListener(e -> quickDeposit());
         quickWithBtn.addActionListener(e -> quickWithdraw());
-        viewStmtBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Statement emailed!"));
+        viewStmtBtn.addActionListener(e -> JOptionPane.showMessageDialog(this, "Statement emailed! (demo)"));
         transferBtn.addActionListener(e -> {
             transactionTypeCombo.setSelectedItem("Transfer");
             recipientPanel.setVisible(true);
+            refreshRecipientOptions();
             pack();
+        });
+
+        // switch active account
+        accountSwitchBox.addActionListener(e -> {
+            currentAccount = (String) accountSwitchBox.getSelectedItem();
+            updateOverview();
+            refreshRecipientOptions();
         });
     }
 
+    // -------------------- actions --------------------
     private void processTransaction() {
-        String type = (String)transactionTypeCombo.getSelectedItem();
+        String type = (String) transactionTypeCombo.getSelectedItem();
         double amount;
         try {
             amount = Double.parseDouble(amountField.getText());
@@ -155,33 +179,40 @@ public class GUIBankingApp extends JFrame {
             showStatus("Enter positive amount", Color.RED);
             return;
         }
-        if (("Withdraw".equals(type) || "Transfer".equals(type)) && amount > currentBalance) {
+        double curBal = balances.get(currentAccount);
+
+        if (("Withdraw".equals(type) || "Transfer".equals(type)) && amount > curBal) {
             showStatus("Insufficient funds", Color.RED);
             return;
         }
+        // transfer needs a different account chosen
         if ("Transfer".equals(type) && recipientCombo.getSelectedItem() == null) {
             showStatus("Select recipient", Color.RED);
             return;
         }
 
-        // Update balance
-        currentBalance += "Deposit".equals(type) ? amount : -amount;
-        balanceLabel.setText("$" + String.format("%.2f", currentBalance));
+        /* ----- apply ----- */
+        if ("Deposit".equals(type)) {
+            balances.put(currentAccount, curBal + amount);
+        } else if ("Withdraw".equals(type)) {
+            balances.put(currentAccount, curBal - amount);
+        } else { // Transfer
+            String dest = (String) recipientCombo.getSelectedItem();
+            balances.put(currentAccount, curBal - amount);
+            balances.put(dest, balances.get(dest) + amount);
+        }
+        updateOverview();
 
-        // Record transaction
+        /* ----- record ----- */
         String desc = descriptionField.getText().trim();
         if (desc.isEmpty()) desc = type;
-        String recipient = recipientCombo.getSelectedItem() != null ? recipientCombo.getSelectedItem().toString() : "";
-        String entry = String.format("%s - %s%s$%.2f%s",
-                new java.text.SimpleDateFormat("MMM d, yyyy HH:mm").format(new java.util.Date()),
-                desc,
-                "Deposit".equals(type) ? "+" : "-",
-                amount,
-                "Transfer".equals(type) ? " to " + recipient : "");
+        String recipient = "Transfer".equals(type) ? " -> " + recipientCombo.getSelectedItem() : "";
+        String entry = String.format("%s - %s (%s): %s$%.2f%s", now(), desc, currentAccount,
+                ("Deposit".equals(type) ? "+" : "-"), amount, recipient);
         transactionListModel.add(0, entry);
-        showStatus("Success!", Color.GREEN);
+        showStatus("Success!", new Color(0, 128, 0));
 
-        // Reset form
+        // reset form
         transactionTypeCombo.setSelectedIndex(0);
         amountField.setText("");
         descriptionField.setText("");
@@ -190,30 +221,67 @@ public class GUIBankingApp extends JFrame {
     }
 
     private void quickDeposit() {
-        currentBalance += 100;
-        balanceLabel.setText("$" + String.format("%.2f", currentBalance));
-        transactionListModel.add(0, new java.text.SimpleDateFormat("MMM d, yyyy HH:mm").format(new java.util.Date()) +
-                " - Quick Deposit: +$100.00");
-        showStatus("Quick deposit successful", Color.GREEN);
+        balances.put(currentAccount, balances.get(currentAccount) + 100);
+        updateOverview();
+        transactionListModel.add(0, now() + " - Quick Deposit (" + currentAccount + "): +$100.00");
+        showStatus("Quick deposit successful", new Color(0, 128, 0));
         pack();
     }
 
     private void quickWithdraw() {
-        if (currentBalance >= 50) {
-            currentBalance -= 50;
-            balanceLabel.setText("$" + String.format("%.2f", currentBalance));
-            transactionListModel.add(0, new java.text.SimpleDateFormat("MMM d, yyyy HH:mm").format(new java.util.Date()) +
-                    " - Quick Withdraw: -$50.00");
-            showStatus("Quick withdrawal successful", Color.GREEN);
+        double curBal = balances.get(currentAccount);
+        if (curBal >= 50) {
+            balances.put(currentAccount, curBal - 50);
+            updateOverview();
+            transactionListModel.add(0, now() + " - Quick Withdraw (" + currentAccount + "): -$50.00");
+            showStatus("Quick withdrawal successful", new Color(0, 128, 0));
         } else {
             showStatus("Insufficient funds", Color.RED);
         }
         pack();
     }
 
+    // -------------------- helpers --------------------
+    private void updateOverview() {
+        balanceLabel.setText("$" + fmt(balances.get(currentAccount)));
+        accountTypeLabel.setText("Account Type: " + currentAccount);
+    }
+
+    private void refreshRecipientOptions() {
+        recipientCombo.removeAllItems();
+        for (String acc : balances.keySet()) if (!acc.equals(currentAccount)) recipientCombo.addItem(acc);
+    }
+
     private void showStatus(String msg, Color col) {
         statusLabel.setText(msg);
         statusLabel.setForeground(col);
+    }
+
+    private static String now() {
+        return new java.text.SimpleDateFormat("MMM d, yyyy HH:mm").format(new java.util.Date());
+    }
+
+    private static String fmt(double v) {
+        return String.format("%.2f", v);
+    }
+
+    // custom renderer to color entries based on type
+    private static ListCellRenderer<? super String> createColorRenderer() {
+        return new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                String entry = value.toString();
+                if (entry.contains("+$")) {          // any credit
+                    label.setForeground(new Color(0,128,0));
+                } else if (entry.contains("-$")) {   // any debit
+                    label.setForeground(Color.RED);
+                } else {
+                    label.setForeground(Color.BLACK);
+                }
+                return label;
+            }
+        };
     }
 
     public static void main(String[] args) {
