@@ -24,6 +24,9 @@ public class GUIBankingApp extends JFrame {
     private JComboBox<String> accountSwitchBox; // top‑right selector
 
     public GUIBankingApp() {
+        // Show password dialog before anything else
+        showPasswordDialog();
+
         // seed balances
         balances.put("Checking", 2500.00);
         balances.put("Savings", 1000.00);
@@ -282,6 +285,40 @@ public class GUIBankingApp extends JFrame {
                 return label;
             }
         };
+    }
+
+    // --- Username and Password dialog shown at startup ---
+    private void showPasswordDialog() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 5, 5));
+        JTextField userField = new JTextField();
+        JPasswordField pwdField = new JPasswordField();
+        panel.add(new JLabel("Username:"));
+        panel.add(userField);
+        panel.add(new JLabel("Password:"));
+        panel.add(pwdField);
+
+        while (true) {
+            int option = JOptionPane.showConfirmDialog(
+                null,
+                panel,
+                "Login",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+            );
+            if (option == JOptionPane.OK_OPTION) {
+                String username = userField.getText().trim();
+                String password = new String(pwdField.getPassword());
+                if ("john doe".equalsIgnoreCase(username) && "1234".equals(password)) {
+                    break;
+                } else {
+                    JOptionPane.showMessageDialog(null, "Incorrect username or password. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                    userField.setText("");
+                    pwdField.setText("");
+                }
+            } else {
+                System.exit(0); // User cancelled
+            }
+        }
     }
 
     public static void main(String[] args) {
