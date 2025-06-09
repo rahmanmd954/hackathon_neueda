@@ -591,6 +591,34 @@
             const tctx = document.getElementById('transactionChart').getContext('2d'); const last7 = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }).reverse(); charts.transaction = new Chart(tctx, { type: 'line', data: { labels: last7, datasets: [{ label: 'Transaction Volume', data: new Array(7).fill(0), borderColor: 'rgba(46,204,113,1)', backgroundColor: 'rgba(46,204,113,.1)', tension: .4, fill: true }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
             // Balance History
             const hctx = document.getElementById('balanceHistoryChart').getContext('2d'); charts.history = new Chart(hctx, { type: 'line', data: { labels: balanceHistory.map(b => b.date.toLocaleDateString()), datasets: [{ label: 'Total Balance', data: balanceHistory.map(b => b.total), borderColor: 'rgba(255,99,132,1)', backgroundColor: 'rgba(255,99,132,.1)', tension: .3, fill: true }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+            const bctx = document
+                .getElementById('balanceChart')
+                .getContext('2d');
+
+            charts.balance = new Chart(bctx, {
+                type: 'pie',              //  ← was "doughnut"
+                data: {
+                    labels: Object.keys(balances),
+                    datasets: [{
+                        data: Object.values(balances),
+                        backgroundColor: [
+                            'rgba(52, 152, 219, .8)',   // Checking
+                            'rgba(155, 89, 182, .8)'    // Savings
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(155, 89, 182, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
         }
         function updateCharts() {// distribution
             if (charts.balance) { charts.balance.data.datasets[0].data = Object.values(balances); charts.balance.update(); }
