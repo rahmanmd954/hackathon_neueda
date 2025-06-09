@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureBank Pro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .balance-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .account-info {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .transaction-history {
+            grid-column: 1 / -1;
+        }
+
+        .transaction-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .show-message {
+            opacity: 1;
+        }
+
+        .icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-btn {
+            padding: 10px 15px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 2s ease-out forwards;
+        }
+
+        @keyframes particle-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏦 SecureBank Pro</div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">💳</span>
+                    Account Overview
+                </h2>
+                
+                <div class="account-info">
+                    <div><strong>Account Number:</strong> ****1234</div>
+                    <div><strong>Account Type:</strong> Checking</div>
+                    <div><strong>Account Holder:</strong> John Doe</div>
+                </div>
+
+                <div class="balance-display" id="balance">$2,500.00</div>
+
+                <div class="quick-actions">
+                    <div class="quick-btn" onclick="quickDeposit()">Quick Deposit $100</div>
+                    <div class="quick-btn" onclick="quickWithdraw()">Quick Withdraw $50</div>
+                    <div class="quick-btn" onclick="viewStatement()">View Statement</div>
+                    <div class="quick-btn" onclick="transferFunds()">Transfer Funds</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon">💸</span>
+                    Make Transaction
+                </h2>
+
+                <div class="status-message" id="statusMessage"></div>
+
+                <div id="transactionForm">
+                    <div class="form-group">
+                        <label for="transactionType">Transaction Type</label>
+                        <select id="transactionType">
+                            <option value="">Select Type</option>
+                            <option value="deposit">Deposit</option>
+                            <option value="withdraw">Withdraw</option>
+                            <option value="transfer">Transfer</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Amount ($)</label>
+                        <input type="number" id="amount" min="0.01" step="0.01" placeholder="Enter amount">
+                    </div>
+
+                    <div class="form-group" id="recipientGroup" style="display: none;">
+                        <label for="recipient">Recipient Account</label>
+                        <input type="text" id="recipient" placeholder="Enter account number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" placeholder="Optional description">
+                    </div>
+
+                    <button type="button" class="btn" onclick="processTransaction()">Process Transaction</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card transaction-history">
+            <h2 class="card-title">
+                <span class="icon">📊</span>
+                Recent Transactions
+            </h2>
+            <div id="transactionList">
+                <div class="transaction-item">
+                    <div>
+                        <div><strong>Initial Deposit</strong></div>
+                        <div style="color: #666; font-size: 14px;">Jan 15, 2025 - 09:00 AM</div>
+                    </div>
+                    <div class="transaction-amount positive">+$2,500.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banking App State
+        let currentBalance = 2500.00;
+        let transactions = [
+            {
+                id: 1,
+                type: 'deposit',
+                amount: 2500.00,
+                description: 'Initial Deposit',
+                date: new Date('2025-01-15T09:00:00'),
+                balance: 2500.00
+            }
+        ];
+
+        // DOM Elements - will be set after DOM loads
+        let balanceDisplay, transactionForm, transactionList, statusMessage, transactionType, recipientGroup;
+
+        // Initialize after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get DOM elements
+            balanceDisplay = document.getElementById('balance');
+            transactionForm = document.getElementById('transactionForm');
+            transactionList = document.getElementById('transactionList');
+            statusMessage = document.getElementById('statusMessage');
+            transactionType = document.getElementById('transactionType');
+            recipientGroup = document.getElementById('recipientGroup');
+
+            // Add event listeners
+            if (transactionType) {
+                transactionType.addEventListener('change', toggleRecipientField);
+            }
+
+            // Initialize display
+            updateBalanceDisplay();
+            console.log('Banking app initialized successfully');
+        });
+
+        function toggleRecipientField() {
+            const isTransfer = transactionType.value === 'transfer';
+            if (recipientGroup) {
+                recipientGroup.style.display = isTransfer ? 'block' : 'none';
+            }
+            const recipientInput = document.getElementById('recipient');
+            if (recipientInput) {
+                recipientInput.required = isTransfer;
+            }
+        }
+
+        function processTransaction(e) {
+            e.preventDefault();
+            
+            const type = document.getElementById('transactionType').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const recipient = document.getElementById('recipient').value;
+            const description = document.getElementById('description').value || `${type.charAt(0).toUpperCase() + type.slice(1)} transaction`;
+
+            // Basic validation
+            if (!type) {
+                showMessage('Please select a transaction type!', 'error');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                showMessage('Please enter a valid amount!', 'error');
+                return;
+            }
+
+            // Validation for withdrawals and transfers
+            if (type === 'withdraw' || type === 'transfer') {
+                if (amount > currentBalance) {
+                    showMessage('Insufficient funds!', 'error');
+                    createParticleEffect(document.querySelector('.btn'), '#dc3545');
+                    return;
+                }
+            }
+
+            if (type === 'transfer' && !recipient) {
+                showMessage('Please enter recipient account number!', 'error');
+                return;
+            }
+
+            // Process transaction
+            const transaction = {
+                id: transactions.length + 1,
+                type: type,
+                amount: amount,
+                description: description,
+                recipient: recipient,
+                date: new Date(),
+                balance: calculateNewBalance(type, amount)
+            };
+
+            // Update balance
+            currentBalance = transaction.balance;
+            transactions.unshift(transaction);
+
+            // Update UI
+            updateBalanceDisplay();
+            addTransactionToList(transaction);
+            showMessage(`Transaction successful! ${type.charAt(0).toUpperCase() + type.slice(1)} of ${amount.toFixed(2)}`, 'success');
+            
+            // Cool particle effect
+            createParticleEffect(document.querySelector('.btn'), '#28a745');
+            
+            // Reset form
+            transactionForm.reset();
+            toggleRecipientField();
+        }
+
+        function calculateNewBalance(type, amount) {
+            if (type === 'deposit') {
+                return currentBalance + amount;
+            } else {
+                return currentBalance - amount;
+            }
+        }
+
+        function updateBalanceDisplay() {
+            balanceDisplay.textContent = `$${currentBalance.toFixed(2)}`;
+            
+            // Add a subtle animation
+            balanceDisplay.style.transform = 'scale(1.1)';
+            balanceDisplay.style.color = currentBalance >= 0 ? '#28a745' : '#dc3545';
+            
+            setTimeout(() => {
+                balanceDisplay.style.transform = 'scale(1)';
+                balanceDisplay.style.color = '#667eea';
+            }, 300);
+        }
+
+        function addTransactionToList(transaction) {
+            const isPositive = transaction.type === 'deposit';
+            const sign = isPositive ? '+' : '-';
+            const colorClass = isPositive ? 'positive' : 'negative';
+            
+            const transactionElement = document.createElement('div');
+            transactionElement.className = 'transaction-item';
+            transactionElement.innerHTML = `
+                <div>
+                    <div><strong>${transaction.description}</strong></div>
+                    <div style="color: #666; font-size: 14px;">
+                        ${transaction.date.toLocaleDateString()} - ${transaction.date.toLocaleTimeString()}
+                        ${transaction.recipient ? ` → ${transaction.recipient}` : ''}
+                    </div>
+                </div>
+                <div class="transaction-amount ${colorClass}">${sign}$${transaction.amount.toFixed(2)}</div>
+            `;
+            
+            transactionList.insertBefore(transactionElement, transactionList.firstChild);
+        }
+
+        function showMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type} show-message`;
+            
+            setTimeout(() => {
+                statusMessage.classList.remove('show-message');
+            }, 3000);
+        }
+
+        function createParticleEffect(element, color) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = centerX + (Math.random() - 0.5) * 40 + 'px';
+                particle.style.top = centerY + (Math.random() - 0.5) * 40 + 'px';
+                particle.style.background = color;
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 2000);
+            }
+        }
+
+        // Quick Action Functions
+        function quickDeposit() {
+            currentBalance += 100;
+            const transaction = {
+                id: transactions.length + 1,
+                type: 'deposit',
+                amount: 100,
+                description: 'Quick Deposit',
+                date: new Date(),
+                balance: currentBalance
+            };
+            
+            transactions.unshift(transaction);
+            updateBalanceDisplay();
+            addTransactionToList(transaction);
+            showMessage('Quick deposit of $100 successful!', 'success');
+        }
+
+        function quickWithdraw() {
+            if (currentBalance >= 50) {
+                currentBalance -= 50;
+                const transaction = {
+                    id: transactions.length + 1,
+                    type: 'withdraw',
+                    amount: 50,
+                    description: 'Quick Withdrawal',
+                    date: new Date(),
+                    balance: currentBalance
+                };
+                
+                transactions.unshift(transaction);
+                updateBalanceDisplay();
+                addTransactionToList(transaction);
+                showMessage('Quick withdrawal of $50 successful!', 'success');
+            } else {
+                showMessage('Insufficient funds for quick withdrawal!', 'error');
+            }
+        }
+
+        function viewStatement() {
+            showMessage('Statement request submitted! Check your email.', 'success');
+        }
+
+        function transferFunds() {
+            document.getElementById('transactionType').value = 'transfer';
+            toggleRecipientField();
+            document.getElementById('amount').focus();
+        }
+
+        // Initialize app - remove duplicate
+        // (This was moved to the top of the script)
+    </script>
+</body>
+</html>
