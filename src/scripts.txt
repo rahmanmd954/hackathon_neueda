@@ -1,0 +1,54 @@
+🎤 Slide 1 – SecureBank Pro at a Glance
+Script:
+"Welcome to my presentation on SecureBank Pro. This is a client-side banking demo application built entirely with HTML, CSS, and JavaScript. What makes this project unique is that it doesn’t rely on any backend—everything runs locally in the browser.
+Users can log in, switch between Checking and Savings accounts, make deposits, withdrawals, and transfers, and immediately see their changes reflected in the interface. It’s fast, responsive, and built to simulate the experience of a real banking app without any actual server or database connection."
+
+🎤 Slide 2 – User Interface & Navigation
+Script:
+"The interface is designed to be clean and intuitive. At the top, we have a fixed header that includes the app’s logo and a dropdown menu to switch between accounts.
+Beneath that, we use a tab-based layout with three main views: Overview, Transactions, and Analytics.
+
+The Overview tab shows the current balance and quick actions.
+
+The Transactions tab lets users perform operations like deposits, withdrawals, and transfers.
+
+The Analytics tab provides financial summaries and charts.
+The UI is fully responsive, meaning it works well on both desktop and mobile screens."
+
+🎤 Slide 3 – Transaction Handling
+Script:
+"Users can initiate three types of transactions: Deposit, Withdraw, and Transfer.
+Each transaction includes input validation—for example, the app prevents negative deposits or overdrafts.
+All actions trigger instant balance updates and are logged with a timestamp and description in the transaction history section.
+If something goes wrong, the app shows a red error banner; if the transaction succeeds, a green success message appears.
+The Transfer feature is smart—it only shows recipient account options that are different from the currently selected account."
+
+🎤 Slide 4 – Analytics & Visual Feedback
+Script:
+"The Analytics tab gives users insight into their financial activity.
+We calculate and display:
+
+The total combined balance of all accounts.
+
+The average transaction amount.
+
+The number of transactions for the current month.
+We also render two charts using Chart.js:
+
+A doughnut chart that shows how the user’s money is split between Checking and Savings.
+
+A line chart that displays transaction volume over the past 7 days.
+These charts update automatically when new transactions are made."
+
+🎤 Slide 5 – Tech Stack & Takeaways
+Script:
+"To wrap up, here’s a quick overview of the technologies used:
+
+We used HTML5 and CSS3 for structure and styling, including modern features like Grid, Flexbox, and animations.
+
+JavaScript drives all logic—there’s no framework involved.
+
+Chart.js was integrated for analytics and data visualization.
+The entire application runs client-side, making it lightweight, easy to deploy, and a great example of how powerful a pure front-end app can be.
+It’s ideal for demonstrating UI/UX skills, handling state in JavaScript, and visualizing financial data."
+
